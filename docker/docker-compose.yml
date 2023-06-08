@@ -1,0 +1,17 @@
+services:
+    trackify:
+        image: ghcr.io/eric-hess/trackify:latest
+        restart: unless-stopped
+        ports:
+            - 8080:80
+    couchdb:
+        image: couchdb:latest
+        restart: unless-stopped
+        ports:
+            - 5984:5984
+        volumes:
+            - ./data:/opt/couchdb/data
+            - ./config:/opt/couchdb/etc/local.d
+        environment:
+            - COUCHDB_USER=admin
+            - COUCHDB_PASSWORD=YOURPASSWORD
