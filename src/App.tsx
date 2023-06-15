@@ -141,7 +141,7 @@ const App = () => {
     };
 
     const deleteConnectionDetail = (id: string) => {
-        setSavedConnectionDetails(savedConnectionDetails.filter(e => e.id === id));
+        setSavedConnectionDetails(savedConnectionDetails.filter(e => e.id !== id));
     };
 
     const addSpeedDialActions = (actions: SpeedDialActionModel[]) => {
