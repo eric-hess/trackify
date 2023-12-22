@@ -3,11 +3,9 @@ import { calculateDaysBetween, formatFromString, getDateString, localizedFormat 
 import * as React from 'react';
 import TrackForm from '../Track/Form';
 import TrackList from '../Track/List';
-import { ActivityData as ActivityDataModel } from '../../model/ActivityData';
 import Create from './Form';
 import Chart from '../Chart/Chart';
 import { MoreVert as MoreVertIcon } from '@mui/icons-material';
-import { ActivityQuickTrackAction as ActivityQuickTrackActionModel } from '../../model/ActivityQuickTrackAction';
 import { v4 as uuidV4 } from 'uuid';
 import QuickTrackActionForm from '../QuickTrackAction/Form';
 import ActionMenu from '../ActionMenu';
@@ -17,7 +15,6 @@ import { Activity as ActivityModel } from '../../model/Activity';
 
 interface Props {
     activity: ActivityModel;
-    quickTrackActions: ActivityQuickTrackActionModel[];
     track: (id: string, date: string, amount: number) => void;
     deleteTracked: (id: string) => void;
     delete: () => void;
@@ -33,14 +30,22 @@ const Card = (props: Props) => {
     const [isEditModalOpen, setIsEditModalOpen] = React.useState<boolean>(false);
     const [isListQuickTrackActionModalOpen, setIsListQuickTrackActionModalOpen] = React.useState<boolean>(false);
     const [isAddQuickTrackActionModalOpen, setIsAddQuickTrackActionModalOpen] = React.useState<boolean>(false);
-    const [amount, setAmount] = React.useState<number>(0);
-    const [lastTracked, setLastTracked] = React.useState<ActivityDataModel | undefined>(undefined);
     const [actionMenuAnchorElement, setActionMenuAnchorElement] = React.useState<undefined | HTMLElement>(undefined);
     const [isExportAsJsonModalOpen, setIsExportAsJsonModalOpen] = React.useState<boolean>(false);
+    const [contentEntries, setContentEntries] = React.useState<string[]>([]);
 
     React.useEffect(() => {
-        setAmount(props.activity.data.reduce((total, data) => total + data.amount, 0));
-        setLastTracked(props.activity.data.sort((a, b) => a.date.localeCompare(b.date)).at(-1));
+        const amount = props.activity.data.reduce((total, data) => total + data.amount, 0);
+        const lastTracked = props.activity.data.sort((a, b) => a.date.localeCompare(b.date)).at(-1);
+        const amountLastSevenDays = props.activity.data.filter(e => calculateDaysBetween(getDateString(), e.date) < 7).reduce((total, current) => total + current.amount, 0);
+
+        setContentEntries([
+            `total: ${amount} ${props.activity.unit}`,
+            `last 7 days Σ: ${amountLastSevenDays} ${props.activity.unit}`,
+            `last 7 days ⌀: ${(amountLastSevenDays / 7).toFixed(amountLastSevenDays - Number(amountLastSevenDays.toFixed(2)) > 0 ? 2 : 0)} ${props.activity.unit}`,
+            `current day: ${props.activity.data.filter(e => getDateString() === getDateString(e.date)).reduce((total, current) => total + current.amount, 0)} ${props.activity.unit}`,
+            `last: ${lastTracked ? `${lastTracked.amount} ${props.activity.unit} at ${formatFromString(lastTracked.date, localizedFormat)}` : 'never'}`
+        ]);
     }, [props.activity.data]);
 
     return (
@@ -63,38 +68,19 @@ const Card = (props: Props) => {
                         container
                         spacing={2}
                     >
-                        <Grid
-                            item
-                            xs={12}
-                        >
-                            <Typography>
-                                total: {amount} {props.activity.unit}
-                            </Typography>
-                        </Grid>
-                        <Grid
-                            item
-                            xs={12}
-                        >
-                            <Typography>
-                                last 7 days: {props.activity.data.filter(e => calculateDaysBetween(getDateString(), e.date) < 7).reduce((total, current) => total + current.amount, 0)} {props.activity.unit}
-                            </Typography>
-                        </Grid>
-                        <Grid
-                            item
-                            xs={12}
-                        >
-                            <Typography>
-                                current day: {props.activity.data.filter(e => getDateString() === getDateString(e.date)).reduce((total, current) => total + current.amount, 0)} {props.activity.unit}
-                            </Typography>
-                        </Grid>
-                        <Grid
-                            item
-                            xs={12}
-                        >
-                            <Typography>
-                                last: {lastTracked ? `${lastTracked.amount} ${props.activity.unit} at ${formatFromString(lastTracked.date, localizedFormat)}` : 'never'}
-                            </Typography>
-                        </Grid>
+                        {
+                            contentEntries.map((e, i) => (
+                                <Grid
+                                    key={i}
+                                    item
+                                    xs={12}
+                                >
+                                    <Typography>
+                                        {e}
+                                    </Typography>
+                                </Grid>
+                            ))
+                        }
                     </Grid>
                 </MuiCardContent>
                 <MuiCardActions>
@@ -122,8 +108,8 @@ const Card = (props: Props) => {
                                 fullWidth
                             >
                                 {
-                                    props.quickTrackActions.length > 0 
-                                        ? props.quickTrackActions.map(entry => {
+                                    props.activity.quickTrackActions.length > 0
+                                        ? props.activity.quickTrackActions.map(entry => {
                                             return (
                                                 <Button
                                                     key={entry.id}
@@ -202,7 +188,7 @@ const Card = (props: Props) => {
                 onClose={() => setIsListQuickTrackActionModalOpen(false)}
                 component={(
                     <QuickTrackActionList
-                        quickTrackActions={props.quickTrackActions}
+                        quickTrackActions={props.activity.quickTrackActions}
                         saveQuickTrackAction={(id, text, amount) => props.saveQuickTrackAction(id, text, amount)}
                         deleteQuickTrackAction={(id) => props.deleteQuickTrackAction(id)}
                     />

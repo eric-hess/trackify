@@ -124,7 +124,6 @@ const Dashboard = (props: Props) => {
                             >
                                 <ActivityCard
                                     activity={entry}
-                                    quickTrackActions={entry.quickTrackActions}
                                     track={(id, date, amount) => {
                                         props.saveActivity({
                                             ...entry,
