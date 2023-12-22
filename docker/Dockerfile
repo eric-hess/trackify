@@ -3,6 +3,9 @@ FROM node:latest as build
 WORKDIR /usr/src/app
 
 COPY package.json .
+COPY package-lock.json .
+COPY .babelrc .
+COPY webpack.config.js .
 COPY tsconfig.json .
 COPY public public
 COPY src src
