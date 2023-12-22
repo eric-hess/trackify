@@ -50,7 +50,16 @@ const App = () => {
                 return;
             }
             
-            setData(doc.data);
+            setData(doc.data.map(entry => {
+                return {
+                    id: entry.id,
+                    name: entry.name,
+                    unit: entry.unit,
+                    data: entry.data ?? [],
+                    quickTrackActions: entry.quickTrackActions ?? [],
+                    attributes: entry.attributes ?? []
+                };
+            }));
         }).catch((error) => {
             setData([]);
         }).finally(() => setIsDataLoaded(true));

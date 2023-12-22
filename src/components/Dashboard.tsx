@@ -124,7 +124,7 @@ const Dashboard = (props: Props) => {
                             >
                                 <ActivityCard
                                     activity={entry}
-                                    track={(id, date, amount) => {
+                                    track={(id, date, amount, attributes) => {
                                         props.saveActivity({
                                             ...entry,
                                             data: [
@@ -132,7 +132,8 @@ const Dashboard = (props: Props) => {
                                                 {
                                                     id,
                                                     date,
-                                                    amount
+                                                    amount,
+                                                    attributes
                                                 }
                                             ]
                                         });
@@ -174,6 +175,35 @@ const Dashboard = (props: Props) => {
                                             ]
                                         });
                                     }}
+
+
+                                    saveAttribute={(id, name, type) => {
+                                        props.saveActivity({
+                                            ...entry,
+                                            attributes: [
+                                                ...entry.attributes.filter(e => e.id !== id),
+                                                {
+                                                    id,
+                                                    name,
+                                                    type
+                                                }
+                                            ]
+                                        });
+                                    }}
+                                    deleteAttribute={(id) => {
+                                        props.saveActivity({
+                                            ...entry,
+                                            attributes: [
+                                                ...entry.attributes.filter(e => e.id !== id)
+                                            ],
+                                            data: entry.data.map(e => {
+                                                return {
+                                                    ...e,
+                                                    attributes: e.attributes.filter(a => a.activityAttributeId !== id)
+                                                };
+                                            })
+                                        });
+                                    }}
                                 />
                             </Grid>
                         );
@@ -192,7 +222,8 @@ const Dashboard = (props: Props) => {
                                 name,
                                 unit,
                                 data: [],
-                                quickTrackActions: []
+                                quickTrackActions: [],
+                                attributes: []
                             });
                             setIsAddModalOpen(false);
                         }}

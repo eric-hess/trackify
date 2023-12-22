@@ -4,12 +4,13 @@ import { ActivityData as ActivityDataModel } from '../../model/ActivityData';
 import { Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import TrackForm from './Form';
 import DataTable from '../DataTable';
+import { ActivityDataAttribute } from '../../model/ActivityDataAttribute';
+import { Activity } from '../../model/Activity';
 
 interface Props {
-    unit: string;
-    data: ActivityDataModel[];
+    activity: Activity
     delete: (id: string) => void;
-    edit: (id: string, date: string, amount: number) => void;
+    edit: (id: string, date: string, amount: number, attributes: ActivityDataAttribute[]) => void;
 };
 
 const List = (props: Props) => {
@@ -23,10 +24,10 @@ const List = (props: Props) => {
             >
                 <DataTable
                     header={['date', 'amount', '']}
-                    data={props.data.map(e => {
+                    data={props.activity.data.map(e => {
                         return [
                             e.date,
-                            `${e.amount} ${props.unit}`,
+                            `${e.amount} ${props.activity.unit}`,
                             (
                                 <>
                                     <IconButton
@@ -50,11 +51,13 @@ const List = (props: Props) => {
                 onClose={() => setSelectedDataForEdit(undefined)}
             >
                 <TrackForm
+                    activity={props.activity}
                     id={selectedDataForEdit?.id}
                     date={selectedDataForEdit?.date}
                     amount={selectedDataForEdit?.amount}
-                    track={(id, date, amount) => {
-                        props.edit(id, date, amount)
+                    attributes={selectedDataForEdit?.attributes}
+                    track={(id, date, amount, attributes) => {
+                        props.edit(id, date, amount, attributes)
                         setSelectedDataForEdit(undefined)
                     }}
                 />

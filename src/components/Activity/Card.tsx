@@ -12,15 +12,21 @@ import ActionMenu from '../ActionMenu';
 import Modal from '../Modal';
 import QuickTrackActionList from '../QuickTrackAction/List';
 import { Activity as ActivityModel } from '../../model/Activity';
+import AttributeForm from '../Attribute/Form';
+import AttributeList from '../Attribute/List';
+import {ActivityAttributeType} from '../../model/ActivityAttribute';
+import {ActivityDataAttribute} from '../../model/ActivityDataAttribute';
 
 interface Props {
     activity: ActivityModel;
-    track: (id: string, date: string, amount: number) => void;
+    track: (id: string, date: string, amount: number, attributes: ActivityDataAttribute[]) => void;
     deleteTracked: (id: string) => void;
     delete: () => void;
     edit: (name: string, unit: string) => void;
     saveQuickTrackAction: (id: string, text: string, amount: number) => void;
     deleteQuickTrackAction: (id: string) => void;
+    saveAttribute: (id: string, name: string, type: ActivityAttributeType) => void;
+    deleteAttribute: (id: string) => void;
 };
 
 const Card = (props: Props) => {
@@ -30,6 +36,8 @@ const Card = (props: Props) => {
     const [isEditModalOpen, setIsEditModalOpen] = React.useState<boolean>(false);
     const [isListQuickTrackActionModalOpen, setIsListQuickTrackActionModalOpen] = React.useState<boolean>(false);
     const [isAddQuickTrackActionModalOpen, setIsAddQuickTrackActionModalOpen] = React.useState<boolean>(false);
+    const [isListAttributesModalOpen, setIsListAttributesModalOpen] = React.useState<boolean>(false);
+    const [isAddAttributeModalOpen, setIsAddAttributeModalOpen] = React.useState<boolean>(false);
     const [actionMenuAnchorElement, setActionMenuAnchorElement] = React.useState<undefined | HTMLElement>(undefined);
     const [isExportAsJsonModalOpen, setIsExportAsJsonModalOpen] = React.useState<boolean>(false);
     const [contentEntries, setContentEntries] = React.useState<string[]>([]);
@@ -115,7 +123,12 @@ const Card = (props: Props) => {
                                                     key={entry.id}
                                                     variant="outlined"
                                                     fullWidth
-                                                    onClick={() => props.track(uuidV4(), formatFromString(), entry.amount)}
+                                                    onClick={() => props.track(uuidV4(), formatFromString(), entry.amount, props.activity.attributes.map(attribute => {
+                                                        return {
+                                                            activityAttributeId: attribute.id,
+                                                            value: null
+                                                        };
+                                                    }))}
                                                 >
                                                     {entry.text}
                                                 </Button>
@@ -148,6 +161,14 @@ const Card = (props: Props) => {
                     {
                         text: 'list quick track actions',
                         onClick: () => setIsListQuickTrackActionModalOpen(true)
+                    },
+                    {
+                        text: 'add attribute',
+                        onClick: () => setIsAddAttributeModalOpen(true)
+                    },
+                    {
+                        text: 'list attributes',
+                        onClick: () => setIsListAttributesModalOpen(true)
                     },
                     {
                         text: 'show data',
@@ -195,12 +216,36 @@ const Card = (props: Props) => {
                 )}
             />
             <Modal
+                isOpen={isAddAttributeModalOpen}
+                onClose={() => setIsAddAttributeModalOpen(false)}
+                component={(
+                    <AttributeForm
+                        save={(id, name, type) => {
+                            props.saveAttribute(id, name, type);
+                            setIsAddAttributeModalOpen(false);
+                        }}
+                    />
+                )}
+            />
+            <Modal
+                isOpen={isListAttributesModalOpen}
+                onClose={() => setIsListAttributesModalOpen(false)}
+                component={(
+                    <AttributeList
+                        attributes={props.activity.attributes}
+                        saveAttribute={(id, name, type) => props.saveAttribute(id, name, type)}
+                        deleteAttribute={(id) => props.deleteAttribute(id)}
+                    />
+                )}
+            />
+            <Modal
                 isOpen={isTrackModalOpen}
                 onClose={() => setIsTrackModalOpen(false)}
                 component={(
                     <TrackForm
-                        track={(id, date, amount) => {
-                            props.track(id, date, amount)
+                        activity={props.activity}
+                        track={(id, date, amount, attributes) => {
+                            props.track(id, date, amount, attributes)
                             setIsTrackModalOpen(false)
                         }}
                     />
@@ -211,9 +256,8 @@ const Card = (props: Props) => {
                 onClose={() => setIsDataModalOpen(false)}
                 component={(
                     <TrackList
-                        data={props.activity.data}
-                        unit={props.activity.unit}
-                        edit={(id, date, amount) => props.track(id, date, amount)}
+                        activity={props.activity}
+                        edit={(id, date, amount, attributes) => props.track(id, date, amount, attributes)}
                         delete={(id) => props.deleteTracked(id)}
                     />
                 )}
